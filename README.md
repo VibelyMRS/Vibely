@@ -34,8 +34,12 @@ cd vibely
 ```bash
 python -m venv .venv
 ```
+### 3. Activate the ambient
+```bash
+.venv\Scripts\activate
+```
 
-### 3. Install the required packages
+### 4. Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
