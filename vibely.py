@@ -121,6 +121,7 @@ if st.session_state.step_done:
             Testo da anallizzare: {mood}
             """
         response = model.generate_content(contents=[emotional_analysis_prompt])
+        st.write(responde)
 
         def extract_values_and_justification(answer_text):
             # Cerca i valori di calma e felicità (numeri con punto come separatore)
