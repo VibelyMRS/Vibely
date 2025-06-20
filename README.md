@@ -17,7 +17,7 @@ Vibely uses a Gemini AI model by classifying the user's emotions through the Rus
 
 ## 🔗 Try the app online
 
-👉 [Click here to use Vibely on Streamlit](https://tuo-link.streamlit.app)
+👉 [Click here to use Vibely on Streamlit](https://vibelymrs-vibely-vibely-za9vfe.streamlit.app/)
 
 ---
 
@@ -27,15 +27,19 @@ To run the app locally:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Davideee03/vibely.git
+git clone https://github.com/VibelyMRS/Vibely.git
 cd vibely
 ```
 ### 2. Create the virtual environment
 ```bash
 python -m venv .venv
 ```
+### 3. Activate the ambient
+```bash
+.venv\Scripts\activate
+```
 
-### 3. Install the required packages
+### 4. Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
