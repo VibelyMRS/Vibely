@@ -17,7 +17,7 @@ Vibely uses a Gemini AI model by classifying the user's emotions through the Rus
 
 ## 🔗 Try the app online
 
-👉 [Click here to use Vibely on Streamlit](https://vibelymrs-vibely-vibely-za9vfe.streamlit.app/))
+👉 [Click here to use Vibely on Streamlit](https://vibelymrs-vibely-vibely-za9vfe.streamlit.app/)
 
 ---
 
