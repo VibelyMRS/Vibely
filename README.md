@@ -30,15 +30,19 @@ To run the app locally:
 git clone https://github.com/Davideee03/vibely.git
 cd vibely
 ```
+### 2. Create the virtual environment
+```bash
+python -m venv .venv
+```
 
-### 2. Install the required packages
+### 3. Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Launch the app
+### 4. Launch the app
 ```bash
-streamlit run app.py
+streamlit run vibely.py
 ```
 
 ## 📁 Contents of the repository
