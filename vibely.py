@@ -114,6 +114,7 @@ if st.session_state.step_done:
             considera il desiderio come un'indicazione per il parametro da impostare. Per esempio,
             se il testo esprime un desiderio di energia, l'energia dovrebbe essere alta.
             La risposta generata deve avere solo due valori scritti come segue: energia = 0.5, felicità = 0.6.
+            In qualsiasi caso, nel testo devono essere presenti i due valori di energia e felicità.
             Le cifre devono essere arrotondate alla quarta cifra dopo la virgola.
             Dai un breve motivo delle tue scelte.
 
@@ -204,8 +205,8 @@ if st.session_state.step_done:
             <h3 class='centered'>📋 Would you like to leave me some feedback?</h3>
             <p class='centered' style='color: #1DB954; font-size: 16px;'>
                 Fill out this short 
-                <a href='https://forms.gle/cxkKfyt4eW2usajr9' target='_blank'>
-                Google Form</a> to help us improve.
+                <a href='https://forms.gle/oTA5WfH99ZfAdVsr5' 
+                target='_blank'>Google Form</a> to help us improve.
             </p>
             """,
             unsafe_allow_html=True
