@@ -140,6 +140,9 @@ if st.session_state.step_done:
 
         parts = response.to_dict()["candidates"][0]["content"]["parts"]
         energy, valence, justification = extract_values_and_justification(parts[0].get('text'))
+        
+        st.write("🎯 **Energy:**", energy)
+        st.write("😊 **Valence:**", valence)
 
         radius = 0.05
         increment = 0.05
@@ -188,16 +191,32 @@ if st.session_state.step_done:
         recommended_songs = check_set(recommended_songs)
 
         st.markdown("<h3 class='centered'>🎶 Songs we recommend based on your mood and favorite artists</h3>", unsafe_allow_html=True)
-        st.dataframe(recommended_songs[['Track', 'Artist', 'Album']].reset_index(drop=True), use_container_width=True)
+        for _, row in recommended_songs.iterrows():
+            uri = row['Uri']
+            track_id = uri.split(':')[-1]
+            track_url = f"https://open.spotify.com/track/{track_id}"
+
+            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
+
 
         st.markdown("<h3 class='centered'>🌟 Most popular songs</h3>", unsafe_allow_html=True)
         popular_songs = all_songs.sort_values(by='Views', ascending=False).head(n_recommended_songs)
         popular_songs = check_set(popular_songs, search_in_preferred_songs=False)
-        st.dataframe(popular_songs[['Track', 'Artist', 'Album']].reset_index(drop=True), use_container_width=True)
+        for _, row in popular_songs.iterrows():
+            uri = row['Uri']
+            track_id = uri.split(':')[-1]
+            track_url = f"https://open.spotify.com/track/{track_id}"
+
+            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
 
         st.markdown("<h3 class='centered'>🎵 Random songs</h3>", unsafe_allow_html=True)
         random_songs = df.sample(n_recommended_songs)
-        st.dataframe(random_songs[['Track', 'Artist', 'Album']].reset_index(drop=True), use_container_width=True)
+        for _, row in random_songs.iterrows():
+            uri = row['Uri']
+            track_id = uri.split(':')[-1]
+            track_url = f"https://open.spotify.com/track/{track_id}"
+
+            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
 
         # --- FEEDBACK SECTION ---
         st.markdown(
@@ -207,6 +226,7 @@ if st.session_state.step_done:
                 Fill out this short 
                 <a href='https://forms.gle/oTA5WfH99ZfAdVsr5' 
                 target='_blank'>Google Form</a> to help us improve.
+                Think about which playlist you prefer.
             </p>
             """,
             unsafe_allow_html=True
