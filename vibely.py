@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-from sklearn.metrics.pairwise import cosine_similarity
 import google.generativeai as genai
 
 # --- PAGE CONFIG ---
@@ -49,13 +48,8 @@ st.image("vibely_logo.png", width=650)
 genai.configure(api_key="AIzaSyAvuhTgURgvzTRIp51CzIggks-top10DRs")
 
 # --- LOAD DATA ---
-@st.cache_data
-def load_data():
-    df = pd.read_csv("spotify_songs.csv")
-    corr = pd.read_csv("correlation_matrix.csv", index_col=0)
-    return df, corr
-
-df, similarity_df = load_data()
+df = pd.read_csv("spotify_songs.csv")
+similarity_df = pd.read_csv("correlation_matrix.csv", index_col=0)
 
 # --- SESSION STATE ---
 if "step_done" not in st.session_state:
@@ -80,11 +74,12 @@ if st.button("Done!"):
 
 # --- ANALISI MOOD ---
 if st.session_state.step_done:
+
     selected_artists = st.session_state.selected_artists
 
     def get_similar_artists(favourite_artists, ascending=False):
         size = len(favourite_artists)
-        total_artists = 20
+        total_artists = 25
         new_artists = int(total_artists / size)
         top_similar = []
         for artist in favourite_artists:
@@ -112,25 +107,34 @@ if st.session_state.step_done:
         mood = st.session_state.mood_text
         model = genai.GenerativeModel('models/gemma-3-27b-it')
 
-        emotional_analysis_prompt = f"""
-        Determine how calm the text is. Calmness must range from 0.1433 to 0.777.
-        Also determine how happy the text is. Happiness must range from 0.166 to 0.88.
-        The answer must only contain two values written as follows: calmness = 0.5000, happiness = 0.6000.
-        Round values to four decimal places.
-        Provide a short explanation for your choice.
+        emotional_analysis_prompt= f"""
+            Definisci quanto è pacato il testo. La pacatezza può avere valore compreso tra 0.1433 e 0.777.
+            Definisci anche quanto è felice il testo. La felicità può avere valore compreso tra 0.166 e 0.88
+            Se nel testo si esprime un desiderio (ad esempio, "vorrei ascoltare qualcosa di energetico"),
+            considera il desiderio come un'indicazione per il parametro da impostare. Per esempio,
+            se il testo esprime un desiderio di energia, l'energia dovrebbe essere alta.
+            La risposta generata deve avere solo due valori scritti come segue: energia = 0.5, felicità = 0.6.
+            Le cifre devono essere arrotondate alla quarta cifra dopo la virgola.
+            Dai un breve motivo delle tue scelte.
 
-        Text to analyze: {mood}
-        """
+
+            Testo da anallizzare: {mood}
+            """
         response = model.generate_content(contents=[emotional_analysis_prompt])
 
         def extract_values_and_justification(answer_text):
-            match = re.search(r"calm(?:ness)?\s*=\s*([\d.]+)\s*,\s*happiness\s*=\s*([\d.]+)", answer_text)
+            # Cerca i valori di calma e felicità (numeri con punto come separatore)
+            match = re.search(r"energia\s*=\s*([\d.]+)\s*,\s*felicit[àa]\s*=\s*([\d.]+)", answer_text)
+
             if not match:
                 raise ValueError("Values not found in response.")
+
             calmness = float(match.group(1))
             valence = float(match.group(2))
-            justification_match = re.search(r"\*\*Explanation:\*\*\s*(.*)", answer_text, re.DOTALL)
-            justification = justification_match.group(1).strip() if justification_match else "Explanation not found."
+
+            justification_match = re.search(r"\*\*Motivazione:\*\*\s*(.*)", answer_text, re.DOTALL)
+            justification = justification_match.group(1).strip() if justification_match else "Justification not found."
+
             return calmness, valence, justification
 
         parts = response.to_dict()["candidates"][0]["content"]["parts"]
@@ -140,15 +144,24 @@ if st.session_state.step_done:
         increment = 0.05
         n_recommended_songs = 10
 
-        def recommend_songs(radius, data_frame, extra_songs=25):
-            filtered_df = data_frame[
-                (data_frame['Energy'] >= energy - radius) & (data_frame['Energy'] <= energy + radius) &
-                (data_frame['Valence'] >= valence - radius) & (data_frame['Valence'] <= valence + radius)]
-            if filtered_df.shape[0] < n_recommended_songs + extra_songs:
-                if (radius > 0.2) and (filtered_df.shape[0] >= 15):
+        def recommend_songs(radius, data_frame, extra_songs = 25):
+            print(f"Radius", {radius})
+            
+            #Get all the songs in a certain radius
+            filtered_df = data_frame[(data_frame['Energy'] >= energy - radius) & (data_frame['Energy'] <= energy + radius) & 
+                        (data_frame['Valence'] >= valence - radius) & (data_frame['Valence'] <= valence + radius)]
+
+            if filtered_df.shape[0] < n_recommended_songs+extra_songs:
+                #Do not get songs too far away
+                if (radius>0.2)and(filtered_df.shape[0]>=15):
+                    print(f"Found music: ({filtered_df.shape[0]}).")
                     return filtered_df
-                return recommend_songs(radius + increment, data_frame)
+                
+                #If the number of songs is not enough
+                print(f"There are not enough songs. I increase the radius to {radius}")
+                return recommend_songs(radius+increment, data_frame)  #Recursive call
             else:
+                print(f"I found enough songs ({filtered_df.shape[0]}).")
                 return filtered_df
 
         preferred_songs = recommend_songs(radius, preferred_df)
