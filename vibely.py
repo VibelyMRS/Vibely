@@ -224,7 +224,7 @@ if st.session_state.step_done:
             <h3 class='centered'>📋 Would you like to leave me some feedback?</h3>
             <p class='centered' style='color: #1DB954; font-size: 16px;'>
                 Fill out this short 
-                <a href='https://forms.gle/oTA5WfH99ZfAdVsr5' 
+                <a href='https://forms.gle/cq2ygQYzybbq37G7A' 
                 target='_blank'>Google Form</a> to help us improve.
                 Think about which playlist you prefer.
             </p>
