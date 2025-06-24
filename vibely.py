@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import google.generativeai as genai
 
-# --- PAGE CONFIG ---
+# --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Vibely", layout="centered")
 
 # --- STILE CSS UNIFICATO ---
@@ -36,7 +36,7 @@ st.markdown("""
         .centered {
             text-align: center;
         }
-        
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -47,11 +47,11 @@ st.image("vibely_logo.png", width=650)
 # --- CONFIGURA API ---
 genai.configure(api_key="AIzaSyAvuhTgURgvzTRIp51CzIggks-top10DRs")
 
-# --- LOAD DATA ---
+# --- CARICAMENTO DATI ---
 df = pd.read_csv("spotify_songs.csv")
 similarity_df = pd.read_csv("correlation_matrix.csv", index_col=0)
 
-# --- SESSION STATE ---
+# --- STATO SESSIONE ---
 if "step_done" not in st.session_state:
     st.session_state.step_done = False
 if "mood_analyzed" not in st.session_state:
@@ -60,19 +60,19 @@ if "mood_text" not in st.session_state:
     st.session_state.mood_text = ""
 
 # --- ARTISTI PREFERITI ---
-st.markdown("<h3 class='centered'>🎤 Now tell us your favorite artists</h3>", unsafe_allow_html=True)
+st.markdown("<h3 class='centered'>🎤 Dicci i tuoi artisti preferiti</h3>", unsafe_allow_html=True)
 
 artist_list = sorted(df['Artist'].dropna().unique())
-selected_artists = st.multiselect("Choose one or more artists", options=artist_list)
+selected_artists = st.multiselect("Scegli uno o più artisti", options=artist_list)
 
-if st.button("Done!"):
+if st.button("Fatto!"):
     if not selected_artists:
-        st.warning("Please select at least one artist.")
+        st.warning("Seleziona almeno un artista.")
     else:
         st.session_state.step_done = True
         st.session_state.selected_artists = selected_artists
 
-# --- ANALISI MOOD ---
+# --- ANALISI UMORE ---
 if st.session_state.step_done:
 
     selected_artists = st.session_state.selected_artists
@@ -90,17 +90,17 @@ if st.session_state.step_done:
     top_artists = get_similar_artists(selected_artists, ascending=False)
     preferred_df = df[df["Artist"].isin(top_artists)]
 
-    st.markdown("<h3 class='centered'>💭 How are you feeling today?</h3>", unsafe_allow_html=True)
-    mood_input = st.text_area("Write your mood here 👇", value=st.session_state.mood_text, placeholder="E.g., I feel happy and full of energy! (Si può scrivere anche in italiano)")
+    st.markdown("<h3 class='centered'>💭 Come ti senti oggi?</h3>", unsafe_allow_html=True)
+    mood_input = st.text_area("Scrivi qui il tuo stato d'animo 👇", value=st.session_state.mood_text, placeholder="Es: Mi sento felice e pieno di energia! (Puoi scrivere anche in inglese)")
 
     if mood_input:
         st.session_state.mood_text = mood_input
 
-    if st.button("Analyze"):
+    if st.button("Analizza"):
         if not st.session_state.mood_text.strip():
-            st.warning("Please write something before continuing.")
+            st.warning("Scrivi qualcosa prima di continuare.")
         else:
-            st.info("Analyzing your mood... please wait ⏳")
+            st.info("Analisi in corso... attendi ⏳")
             st.session_state.mood_analyzed = True
 
     if st.session_state.mood_analyzed:
@@ -118,54 +118,39 @@ if st.session_state.step_done:
             Le cifre devono essere arrotondate alla quarta cifra dopo la virgola.
             Dai un breve motivo delle tue scelte.
 
-
-            Testo da anallizzare: {mood}
+            Testo da analizzare: {mood}
             """
         response = model.generate_content(contents=[emotional_analysis_prompt])
 
         def extract_values_and_justification(answer_text):
-            # Cerca i valori di calma e felicità (numeri con punto come separatore)
-            match = re.search(r"energia\s*=\s*([\d.]+)\s*,\s*felicit[àa]\s*=\s*([\d.]+)", answer_text)
-
+            match = re.search(r"energia\s*=\s*([\d.]+)\s*,\s*felicit[\u00e0a]\s*=\s*([\d.]+)", answer_text)
             if not match:
-                raise ValueError("Values not found in response.")
-
+                raise ValueError("Valori non trovati nella risposta.")
             calmness = float(match.group(1))
             valence = float(match.group(2))
-
             justification_match = re.search(r"\*\*Motivazione:\*\*\s*(.*)", answer_text, re.DOTALL)
-            justification = justification_match.group(1).strip() if justification_match else "Justification not found."
-
+            justification = justification_match.group(1).strip() if justification_match else "Motivazione non trovata."
             return calmness, valence, justification
 
         parts = response.to_dict()["candidates"][0]["content"]["parts"]
         energy, valence, justification = extract_values_and_justification(parts[0].get('text'))
-        
-        st.write("🎯 **Energy:**", energy)
-        st.write("😊 **Valence:**", valence)
+
+        st.write("🎯 **Energia:**", energy)
+        st.write("😊 **Felicità:**", valence)
 
         radius = 0.05
         increment = 0.05
         n_recommended_songs = 10
 
         def recommend_songs(radius, data_frame, extra_songs = 25):
-            print(f"Radius", {radius})
-            
-            #Get all the songs in a certain radius
             filtered_df = data_frame[(data_frame['Energy'] >= energy - radius) & (data_frame['Energy'] <= energy + radius) & 
                         (data_frame['Valence'] >= valence - radius) & (data_frame['Valence'] <= valence + radius)]
 
             if filtered_df.shape[0] < n_recommended_songs+extra_songs:
-                #Do not get songs too far away
                 if (radius>0.2)and(filtered_df.shape[0]>=15):
-                    print(f"Found music: ({filtered_df.shape[0]}).")
                     return filtered_df
-                
-                #If the number of songs is not enough
-                print(f"There are not enough songs. I increase the radius to {radius}")
-                return recommend_songs(radius+increment, data_frame)  #Recursive call
+                return recommend_songs(radius+increment, data_frame)
             else:
-                print(f"I found enough songs ({filtered_df.shape[0]}).")
                 return filtered_df
 
         preferred_songs = recommend_songs(radius, preferred_df)
@@ -190,49 +175,45 @@ if st.session_state.step_done:
 
         recommended_songs = check_set(recommended_songs)
 
-        st.markdown("<h3 class='centered'>🎶 Songs we recommend based on your mood and favorite artists</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='centered'>🎶 Canzoni consigliate in base al tuo umore e ai tuoi artisti preferiti</h3>", unsafe_allow_html=True)
         for _, row in recommended_songs.iterrows():
             uri = row['Uri']
             track_id = uri.split(':')[-1]
             track_url = f"https://open.spotify.com/track/{track_id}"
+            st.markdown(f"🎵 **{row['Track']}** di *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
 
-            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
-
-
-        st.markdown("<h3 class='centered'>🌟 Most popular songs</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='centered'>🌟 Canzoni più popolari</h3>", unsafe_allow_html=True)
         popular_songs = all_songs.sort_values(by='Views', ascending=False).head(n_recommended_songs)
         popular_songs = check_set(popular_songs, search_in_preferred_songs=False)
         for _, row in popular_songs.iterrows():
             uri = row['Uri']
             track_id = uri.split(':')[-1]
             track_url = f"https://open.spotify.com/track/{track_id}"
+            st.markdown(f"🎵 **{row['Track']}** di *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
 
-            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
-
-        st.markdown("<h3 class='centered'>🎵 Random songs</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='centered'>🎵 Canzoni casuali</h3>", unsafe_allow_html=True)
         random_songs = df.sample(n_recommended_songs)
         for _, row in random_songs.iterrows():
             uri = row['Uri']
             track_id = uri.split(':')[-1]
             track_url = f"https://open.spotify.com/track/{track_id}"
+            st.markdown(f"🎵 **{row['Track']}** di *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
 
-            st.markdown(f"🎵 **{row['Track']}** by *{row['Artist']}* — [Spotify]({track_url}) - [YouTube]({row['Url_youtube']})")
-
-        # --- FEEDBACK SECTION ---
+        # --- SEZIONE FEEDBACK ---
         st.markdown(
             """
-            <h3 class='centered'>📋 Would you like to leave me some feedback?</h3>
+            <h3 class='centered'>📋 Vuoi lasciarci un feedback?</h3>
             <p class='centered' style='color: #1DB954; font-size: 16px;'>
-                Fill out this short 
+                Compila questo breve 
                 <a href='https://forms.gle/cq2ygQYzybbq37G7A' 
-                target='_blank'>Google Form</a> to help us improve.
-                Think about which playlist you prefer.
+                target='_blank'>modulo Google</a> per aiutarci a migliorare.
+                Pensa a quale playlist ti è piaciuta di più!
             </p>
             """,
             unsafe_allow_html=True
         )
 
-        # --- RESET SESSION ---
+        # --- RESET SESSIONE ---
         st.session_state.step_done = False
         st.session_state.mood_analyzed = False
         del st.session_state["selected_artists"]
