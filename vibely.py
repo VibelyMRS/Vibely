@@ -91,7 +91,7 @@ if st.session_state.step_done:
     preferred_df = df[df["Artist"].isin(top_artists)]
 
     st.markdown("<h3 class='centered'>💭 How are you feeling today?</h3>", unsafe_allow_html=True)
-    mood_input = st.text_area("Write your mood here 👇", value=st.session_state.mood_text, placeholder="E.g., I feel happy and full of energy!")
+    mood_input = st.text_area("Write your mood here 👇", value=st.session_state.mood_text, placeholder="E.g., I feel happy and full of energy! (Si può scrivere anche in italiano)")
 
     if mood_input:
         st.session_state.mood_text = mood_input
