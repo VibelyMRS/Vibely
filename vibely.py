@@ -130,7 +130,7 @@ if st.session_state.step_done:
             valence = float(match.group(2))
             justification_match = re.search(r"\*\*Motivazione:\*\*\s*(.*)", answer_text, re.DOTALL)
             justification = justification_match.group(1).strip() if justification_match else "Motivazione non trovata."
-            return (1-calmness), valence, justification
+            return calmness, valence, justification
 
         parts = response.to_dict()["candidates"][0]["content"]["parts"]
         energy, valence, justification = extract_values_and_justification(parts[0].get('text'))
@@ -217,4 +217,5 @@ if st.session_state.step_done:
         st.session_state.step_done = False
         st.session_state.mood_analyzed = False
         del st.session_state["selected_artists"]
+
 
