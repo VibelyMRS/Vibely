@@ -45,7 +45,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.image("vibely_logo.png", width=650)
 
 # --- CONFIGURA API ---
-genai.configure(api_key="AIzaSyAvuhTgURgvzTRIp51CzIggks-top10DRs")
+genai.configure(api_key="AIzaSyD678E-TpKbcLcad_DzlZYpuG6qNCgRmKo")
 
 # --- CARICAMENTO DATI ---
 df = pd.read_csv("spotify_songs.csv")
@@ -217,5 +217,6 @@ if st.session_state.step_done:
         st.session_state.step_done = False
         st.session_state.mood_analyzed = False
         del st.session_state["selected_artists"]
+
 
 
